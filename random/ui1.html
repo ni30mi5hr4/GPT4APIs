@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBot By Nitish</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        #chat-container {
+            margin-top: 30px;
+            overflow-y: auto;
+            max-height: 400px;
+            padding-right: 20px; /* Add right padding to avoid scrollbar overlap */
+            background-color: #f8f8f8;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .message-container {
+            overflow: hidden;
+            margin-bottom: 20px;
+            opacity: 0; /* Initial opacity for fade-in animation */
+            animation: fadeIn 0.5s ease forwards; /* Animation effect */
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background-color: #e50914;
+            color: #fff;
+            text-align: right;
+            float: right;
+            clear: both; /* Ensure proper alignment */
+        }
+
+        .bot-message {
+            background-color: #333;
+            color: #fff;
+            text-align: left;
+            float: left;
+            clear: both; /* Ensure proper alignment */
+        }
+
+        .input-container {
+            overflow: hidden;
+            margin-top: 30px;
+            position: relative;
+        }
+
+        #query {
+            width: calc(100% - 80px); /* Adjusted width */
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            outline: none;
+            color: #333;
+            background-color: #f8f8f8;
+            float: left;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .send-icon {
+            width: 60px;
+            height: 41.5px;
+            background-color: #e50914;
+            border-radius: 20px;
+            color: #fff;
+            text-align: center;
+            line-height: 44px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            position: absolute;
+            top: 0;
+            right: 0;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .send-icon:hover {
+            background-color: #b2070f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ChatBot By Nitish</h1>
+        <div id="chat-container"></div>
+        <div class="input-container">
+            <input type="text" id="query" placeholder="Type a message...">
+            <div class="send-icon" onclick="sendRequest()">Send</div>
+        </div>
+    </div>
+    <script>
+        function sendRequest() {
+            var query = document.getElementById('query').value;
+            if (query.trim() === "") {
+                return;
+            }
+
+            var url = "https://nixchamp-geminipro.hf.space/";
+            var payload = { q: query };
+
+            var chatContainer = document.getElementById('chat-container');
+            var userMessageContainer = document.createElement('div');
+            userMessageContainer.className = 'message-container';
+            var userMessageElement = document.createElement('div');
+            userMessageElement.className = 'message user-message';
+            userMessageElement.textContent = query;
+            userMessageContainer.appendChild(userMessageElement);
+            chatContainer.appendChild(userMessageContainer);
+
+            var responseDiv = document.createElement('div');
+            responseDiv.className = 'message bot-message';
+            responseDiv.textContent = 'Bot is typing...';
+            chatContainer.appendChild(responseDiv);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            })
+            .then(response => response.json())
+            .then(data => {
+                chatContainer.removeChild(responseDiv);
+                displayResponse(data, chatContainer);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+            // Clear input box after sending message
+            document.getElementById('query').value = "";
+        }
+
+        function displayResponse(response, chatContainer) {
+            var messageClass = response && response.message ? 'bot-message' : 'user-message';
+            var messageText = response && response.message ? response.message : 'Error: No message found in the response.';
+
+            var messageContainer = document.createElement('div');
+            messageContainer.className = 'message-container';
+            var messageElement = document.createElement('div');
+            messageElement.className = 'message ' + messageClass;
+            messageElement.textContent = messageText;
+            messageContainer.appendChild(messageElement);
+            chatContainer.appendChild(messageContainer);
+
+            // Scroll to bottom of chat after new message
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>
