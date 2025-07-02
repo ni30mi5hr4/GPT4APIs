@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GPT-4 Reversed By Nitish</title>
+  <style>
+    /* Add your CSS styles here */
+  </style>
+</head>
+<body>
+  <h1>GPT-4 Reversed By Nitish</h1>
+  <input type="text" id="promptInput" placeholder="Enter your prompt...">
+  <button onclick="generateResponse()">Submit</button>
+  <div id="responseArea"></div>
+
+  <script>
+    async function generateResponse() {
+      try {
+        var prompt = document.getElementById("promptInput").value;
+        var response = await fetch("proxy.php", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: 'prompt=' + encodeURIComponent(prompt)
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch response');
+        }
+        var responseData = await response.text();
+        document.getElementById("responseArea").innerText = responseData;
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+  </script>
+</body>
+</html>

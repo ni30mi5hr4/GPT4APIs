@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GPT-4 Reversed By Nitish</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* General Styles */
+    body {
+      font-family: 'Playfair Display', serif;
+      margin: 0;
+      padding: 0;
+      background-color: #1a1a1a;
+      color: #f5f5f5;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 40px;
+    }
+
+    /* Response Area Styles */
+    #responseArea {
+      background-color: #2b2b2b;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      font-size: 18px;
+      line-height: 1.6;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .message {
+      padding: 10px 15px;
+      border-radius: 10px;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+
+    .user-message {
+      background-color: #4CAF50;
+      align-self: flex-end;
+    }
+
+    .bot-message {
+      background-color: #2b2b2b;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      align-self: flex-start;
+    }
+
+    .bot-typing {
+      font-style: italic;
+      color: #999;
+      animation: typing 0.5s infinite;
+    }
+
+    @keyframes typing {
+      0% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+
+    /* Input and Button Styles */
+    .input-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 40px;
+    }
+
+    #promptInput {
+      flex-grow: 1;
+      padding: 12px 20px;
+      font-size: 18px;
+      border: none;
+      border-radius: 20px 0 0 20px;
+      background-color: #2b2b2b;
+      color: #f5f5f5;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    #promptInput:focus {
+      outline: none;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 18px;
+      border: none;
+      border-radius: 0 20px 20px 0;
+      background-color: #4CAF50;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 28px;
+        margin-bottom: 20px;
+      }
+
+      #promptInput,
+      button {
+        font-size: 16px;
+      }
+
+      #responseArea {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>GPT-4 Reversed By Nitish</h1>
+    <div id="responseArea">
+      <!-- The bot typing message is initially hidden -->
+      <div class="message bot-message bot-typing" style="display: none;">Bot is typing...</div>
+    </div>
+    <div class="input-container">
+      <input type="text" id="promptInput" placeholder="Enter your prompt..." onkeydown="handleKeyPress(event)">
+      <button onclick="generateResponse()">Submit</button>
+    </div>
+  </div>
+
+  <script>
+    async function generateResponse() {
+      try {
+        const promptInput = document.getElementById("promptInput");
+        const prompt = promptInput.value.trim();
+        if (!prompt) return;
+
+        const responseArea = document.getElementById("responseArea");
+        const botTypingMessage = responseArea.querySelector(".bot-message.bot-typing");
+        botTypingMessage.style.display = "block"; // Show the bot typing message
+
+        const userMessage = document.createElement("div");
+        userMessage.classList.add("message", "user-message");
+        userMessage.textContent = prompt;
+        responseArea.appendChild(userMessage);
+
+        promptInput.value = "";
+
+        const response = await fetch("proxy.php", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: 'prompt=' + encodeURIComponent(prompt)
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch response');
+        }
+
+        botTypingMessage.style.display = "none"; // Hide the bot typing message
+
+        const reader = response.body.getReader();
+        let receivedData = '';
+        let finalResponse = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+
+          const chunk = new TextDecoder().decode(value);
+          receivedData += chunk;
+
+          // Check if the chunk contains a complete JSON object
+          const lines = receivedData.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = JSON.parse(line.slice(6));
+              if (data.type === 'live') {
+                finalResponse += data.data;
+              } else if (data.type === 'end') {
+                break;
+              }
+            }
+          }
+
+          // Remove the processed lines from the receivedData
+          receivedData = lines.slice(lines.length - 1).join('\n');
+        }
+
+        const botMessage = document.createElement("div");
+        botMessage.classList.add("message", "bot-message");
+        botMessage.textContent = finalResponse;
+        responseArea.appendChild(botMessage);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        generateResponse();
+      }
+    }
+  </script>
+</body>
+</html>
